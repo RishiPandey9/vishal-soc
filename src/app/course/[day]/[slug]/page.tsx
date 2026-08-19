@@ -145,6 +145,13 @@ function normalizeMarkdown(source: string) {
       continue;
     }
 
+    if (index + 1 < lines.length && lines[index + 1].includes("\t") && trimmed !== "" && !trimmed.endsWith("?")) {
+      listMode = false;
+      output.push(`### ${trimmed}`);
+      index += 1;
+      continue;
+    }
+
     if (listMode && trimmed !== "" && !trimmed.startsWith("-") && !trimmed.startsWith("[") && !trimmed.endsWith(":") && !trimmed.endsWith("?")) {
       output.push(`- ${trimmed}`);
     } else {
