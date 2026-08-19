@@ -16,7 +16,7 @@ interface PageProps {
 }
 
 const textBlockBoundary = (line: string) =>
-  /^(SOC Process|SOC Technology|Technology\t|Stage \d+:|Difficulty$|Step-by-Step Procedure|Expected Output|Key Concepts|Common Mistakes|SOC Analyst Checklist|Interview Questions|DAY \d+:|TOPIC \d+:|\d+\.\d+\s)/.test(line);
+  /^(SOC Process|SOC Technology|Technology\t|Stage \d+:|Difficulty$|Step-by-Step Procedure|Expected Output|Key Concepts|Common Mistakes|SOC Analyst Checklist|Interview Questions|Student Task|PRACTICAL LAB \d+:|Lab [A-Z]:|Search for related events|Check if |Document Findings|Create a summary|DAY \d+:|TOPIC \d+:|\d+\.\d+\s)/.test(line);
 
 const metadataLabels = new Set([
   "Lab Title",
@@ -26,7 +26,7 @@ const metadataLabels = new Set([
   "Prerequisites",
 ]);
 
-const proceduralHeading = /^(Procedure:|Observe the main dashboard:|Analyze the Alert:|Expand the Investigation:|Document Findings:|Common Search Queries:|Learning Outcomes|Investigation Workflow in Wazuh|Wazuh Dashboard Navigation|Mapping Process|Definitions|Expected Output)$/;
+const proceduralHeading = /^(Procedure:|Observe the main dashboard:|Analyze the Alert:?|Expand (the )?Investigation:?|Document Findings:?|Identify the Alert|Gather Context|Analyze Patterns|Search for related events by:|Common Search Queries:|Learning Outcomes|Investigation Workflow in Wazuh|Wazuh Dashboard Navigation|Mapping Process|Definitions|Expected Output)$/;
 const sectionBoundary = /^(Lab [A-Z]:|Step \d+:|PRACTICAL LAB \d+:|Analyst Decision|Escalation Decision|Final Analyst Note|Interview Questions|DAY \d+:|TOPIC \d+:|\d+\.\d+\s|Field\t|Query\t|Issue\t)/;
 
 function toMarkdownTable(rows: string[]) {
@@ -72,11 +72,12 @@ function normalizeMarkdown(source: string) {
       while (index < lines.length) {
         const next = lines[index];
         const nextTrimmed = next.trim();
-        if (nextTrimmed === "" || textBlockBoundary(nextTrimmed)) break;
+        if (nextTrimmed !== "" && textBlockBoundary(nextTrimmed)) break;
         codeLines.push(next);
         index += 1;
       }
       if (codeLines.length > 0) {
+        while (codeLines[codeLines.length - 1] === "") codeLines.pop();
         output.push("```text", ...codeLines, "```");
       }
       continue;
@@ -104,7 +105,7 @@ function normalizeMarkdown(source: string) {
     }
 
     if (proceduralHeading.test(trimmed)) {
-      listMode = /^(Procedure:|Observe the main dashboard:|Expand the Investigation:|Document Findings:|Learning Outcomes)$/.test(trimmed);
+      listMode = /^(Procedure:|Observe the main dashboard:|Expand (the )?Investigation:?|Document Findings:?|Identify the Alert|Gather Context|Analyze Patterns|Search for related events by:|Learning Outcomes)$/.test(trimmed);
       output.push(`### ${trimmed}`);
       index += 1;
       continue;
