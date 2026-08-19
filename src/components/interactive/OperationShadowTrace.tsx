@@ -59,8 +59,8 @@ export function OperationShadowTrace() {
       </div>
 
       {/* Main Workspace */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-        <div className="max-w-7xl mx-auto h-full">
+      <div className="p-4 sm:p-6">
+        <div className="mx-auto max-w-7xl">
           <Tabs defaultValue="case" className="w-full">
             <TabsList className="mb-8 flex h-auto w-full flex-wrap justify-start gap-2 overflow-visible bg-transparent p-0">
               {[['case', 'Case Brief'], ['evidence', 'Evidence'], ['ioc', 'IOC'], ['cti', 'Threat Intel'], ['darkweb', 'Dark Web'], ['actor', 'Threat Actor'], ['ttp', 'TTP'], ['mitre', 'MITRE'], ['timeline', 'Timeline'], ['risk', 'Risk'], ['response', 'Response'], ['report', 'Final Report']].map(([value, label]) => (

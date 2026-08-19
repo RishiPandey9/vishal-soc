@@ -78,12 +78,26 @@ function normalizeMarkdown(source: string) {
       }
       if (codeLines.length > 0) {
         while (codeLines[codeLines.length - 1] === "") codeLines.pop();
-        output.push("```text", ...codeLines, "```");
+        const codeText = codeLines.join("\n");
+        if (codeText.includes("SOC MANAGER") && codeText.includes("L1 ANALYST")) {
+          output.push("[[SOC_ARCHITECTURE_DIAGRAM]]");
+        } else if (codeText.includes("VALIDATION") && codeText.includes("DOCUMENTATION")) {
+          output.push("[[SOC_WORKFLOW_DIAGRAM]]");
+        } else {
+          output.push("```text", ...codeLines, "```");
+        }
       }
       continue;
     }
 
     if (/^\d+\.\d+\s+/.test(trimmed)) {
+      listMode = false;
+      output.push(`## ${trimmed}`);
+      index += 1;
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(trimmed)) {
       listMode = false;
       output.push(`## ${trimmed}`);
       index += 1;
@@ -97,8 +111,8 @@ function normalizeMarkdown(source: string) {
       continue;
     }
 
-    if (/^(PRACTICAL LAB \d+: .+|Step-by-Step Procedure|Step \d+: .+|Questions to ask:|Expected Observations|Analyst Decision|Escalation Decision|Final Analyst Note|Key Concepts|Common Mistakes|SOC Analyst Checklist|Interview Questions|Basic:|Intermediate:|Scenario:|Student Task|Instructor Solution|Alert Summary:|Investigation Summary:|Timeline:|IOC Table:|Classification:|Severity:|Confidence:|Scope:|Recommendations:|Final Conclusion:|DAY \d+ SUMMARY|Skills Acquired|Tools Used|Important Event IDs|Day \d+ Assessment|Multiple Choice Questions|Short Answer Questions|Scenario-Based Questions)$/.test(trimmed)) {
-      if (/^(Analyst Decision|Escalation Decision|Final Analyst Note|Interview Questions)$/.test(trimmed)) listMode = false;
+    if (/^(PRACTICAL LAB \d+: .+|Step-by-Step Procedure|Step \d+: .+|Questions to ask:|Expected Observations|Analyst Decision|Escalation Decision|Final Analyst Note|Key Concepts|Common Mistakes|SOC Analyst Checklist|Interview Questions|Basic:|Intermediate:|Scenario:|Student Task|Instructor Solution|Alert Summary:|Investigation Summary:|Timeline:|IOC Table:|Classification:|Severity:|Confidence:|Scope:|Recommendations:|Final Conclusion:|DAY \d+ SUMMARY|Skills Acquired|Tools Used|Important Event IDs|Day \d+ Assessment|Multiple Choice Questions|Short Answer Questions|Scenario-Based Questions|FINAL COURSE ASSESSMENT|25 Questions|Basic Concepts|SOC Investigation|Windows Logs|SIEM|IOC Investigation|CTI|Threat Hunting|MITRE ATT&CK|Incident Response|Practical Final Assessment|Dataset|Grading Rubric|GLOSSARY|Detection Improvements|Lessons Learned|Final Analyst Conclusion|Containment Recommendations|Eradication Recommendations|Recovery Recommendations)$/.test(trimmed)) {
+      if (/^(Analyst Decision|Escalation Decision|Final Analyst Note|Interview Questions|FINAL COURSE ASSESSMENT|25 Questions|Basic Concepts|SOC Investigation|Windows Logs|SIEM|IOC Investigation|CTI|Threat Hunting|MITRE ATT&CK|Incident Response|Practical Final Assessment|Dataset|Grading Rubric|GLOSSARY|Detection Improvements|Lessons Learned|Final Analyst Conclusion|Containment Recommendations|Eradication Recommendations|Recovery Recommendations)$/.test(trimmed)) listMode = /^(Detection Improvements|Lessons Learned|Containment Recommendations|Eradication Recommendations|Recovery Recommendations)$/.test(trimmed);
       output.push(`### ${trimmed}`);
       index += 1;
       continue;
@@ -148,6 +162,18 @@ function normalizeMarkdown(source: string) {
     if (index + 1 < lines.length && lines[index + 1].includes("\t") && trimmed !== "" && !trimmed.endsWith("?")) {
       listMode = false;
       output.push(`### ${trimmed}`);
+      index += 1;
+      continue;
+    }
+
+    if (/^(Answer|Expected answer):\s*/.test(trimmed)) {
+      output.push(`**Answer:** ${trimmed.replace(/^(Answer|Expected answer):\s*/, "")}`, "");
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.endsWith("?") && !trimmed.startsWith("**")) {
+      output.push(`**Question:** ${trimmed}`, "");
       index += 1;
       continue;
     }
@@ -209,7 +235,19 @@ export default async function CoursePage(props: PageProps) {
   }
 
   if (slug === 'operation-shadow-trace-final-investigation') {
-    return <OperationShadowTrace />;
+    return (
+      <div className="min-h-full">
+        <OperationShadowTrace />
+        <article className="course-content mx-auto w-full max-w-6xl border-t border-border px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+          <div className="mx-auto mb-8 max-w-3xl border-b border-border pb-6 text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Section 12 reference notes</p>
+            <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">Operation Shadow Trace — Complete Investigation Guide</h1>
+            <p className="mt-3 text-muted-foreground">Use this reference section to review the case evidence, investigation procedure, intelligence assessment, response recommendations, and final questions.</p>
+          </div>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdownBody}</ReactMarkdown>
+        </article>
+      </div>
+    );
   }
 
   return (
@@ -236,6 +274,12 @@ export default async function CoursePage(props: PageProps) {
             p: ({node, ...props}) => {
               // Check if it's a "Hinglish" or "Layer" block to style differently
               const text = String(props.children);
+              if (text.trim() === "[[SOC_ARCHITECTURE_DIAGRAM]]") {
+                return <SocArchitectureDiagram />;
+              }
+              if (text.trim() === "[[SOC_WORKFLOW_DIAGRAM]]") {
+                return <SocWorkflowDiagram />;
+              }
               const field = text.match(/^(Primary responsibility|Typical tasks|Key skills|Decision):\s*([\s\S]*)$/);
               if (field) {
                 return (
@@ -315,4 +359,31 @@ export default async function CoursePage(props: PageProps) {
       </div>
     </article>
   );
+}
+
+function SocArchitectureDiagram() {
+  return (
+    <div className="my-8 rounded-xl border border-border bg-secondary/20 p-4 sm:p-6">
+      <div className="mb-5 flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">SOC operating model</p><h3 className="mt-1 text-lg font-bold text-foreground">People and escalation structure</h3></div><span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">Roles</span></div>
+      <div className="mx-auto max-w-3xl space-y-3">
+        <DiagramNode title="SOC Manager" description="Strategy, reporting, and team management" tone="primary" />
+        <div className="mx-auto h-5 w-px bg-border" />
+        <div className="grid gap-3 md:grid-cols-3"><DiagramNode title="L3 Analyst" description="Advanced investigation" tone="accent" /><DiagramNode title="Threat Hunter" description="Proactive detection" tone="accent" /><DiagramNode title="Incident Responder" description="Containment and recovery" tone="accent" /></div>
+        <div className="mx-auto h-5 w-px bg-border" />
+        <DiagramNode title="L2 Analyst" description="Deep investigation and validation" tone="warning" />
+        <div className="mx-auto h-5 w-px bg-border" />
+        <DiagramNode title="L1 Analyst" description="Alert triage and escalation" tone="success" />
+      </div>
+    </div>
+  );
+}
+
+function SocWorkflowDiagram() {
+  const steps = ["Alert", "Validation", "Triage", "Context gathering", "Investigation", "Severity assessment", "Escalation", "Documentation"];
+  return <div className="my-8 rounded-xl border border-border bg-secondary/20 p-4 sm:p-6"><div className="mb-5"><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Analyst workflow</p><h3 className="mt-1 text-lg font-bold text-foreground">From alert to documented decision</h3></div><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{steps.map((step, index) => <div key={step} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">{index + 1}</span><span className="text-sm font-medium capitalize text-foreground">{step}</span></div>)}</div></div>;
+}
+
+function DiagramNode({ title, description, tone }: { title: string; description: string; tone: "primary" | "accent" | "warning" | "success" }) {
+  const tones = { primary: "border-primary/40 bg-primary/10", accent: "border-accent/35 bg-accent/10", warning: "border-warning/35 bg-warning/10", success: "border-success/35 bg-success/10" };
+  return <div className={`rounded-lg border p-4 text-center ${tones[tone]}`}><p className="font-bold text-foreground">{title}</p><p className="mt-1 text-xs text-muted-foreground">{description}</p></div>;
 }

@@ -227,6 +227,19 @@
   line-height: 1.75;
 }
 
+.course-content p:has(> strong:first-child) {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.6rem;
+  background: hsl(var(--secondary) / 0.28);
+}
+
+.course-content p > strong:first-child {
+  color: hsl(var(--primary));
+  font-weight: 700;
+}
+
 .course-content pre {
   border: 1px solid hsl(var(--border));
   border-radius: 0.75rem;
